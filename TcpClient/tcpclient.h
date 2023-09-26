@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QFile>
 #include <QTcpSocket>
+#include "protocol.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TcpClient; }
@@ -21,6 +22,9 @@ public:
 
 public slots:
     void showConnect();
+
+private slots:
+    void on_send_pb_clicked();
 
 private:
     Ui::TcpClient *ui;

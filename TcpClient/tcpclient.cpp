@@ -9,6 +9,7 @@ TcpClient::TcpClient(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::TcpClient)
 {
+    this->setFixedSize(380,250);
     ui->setupUi(this);
     // 加载配置
     loadConfig();
@@ -48,7 +49,6 @@ void TcpClient::connectionServer()
     //connect(&m_tcpSocket, SIGNAL(connectd()), this, SLOT(showConnect()));
     connect(&m_tcpSocket, &QTcpSocket::connected, this, &TcpClient::showConnect);
 
-
     // 连接服务器
     m_tcpSocket.connectToHost(QHostAddress(m_strIP), m_usPort);
 }
@@ -56,5 +56,24 @@ void TcpClient::connectionServer()
 void TcpClient::showConnect()
 {
     QMessageBox::information(this, "连接服务器", "连接服务器成功");
+}
+
+
+void TcpClient::on_send_pb_clicked()
+{
+    QString strMsg = ui->lineEdit->text();
+    if (!strMsg.isEmpty())
+    {
+        PDU* pdu = mkPDU(strMsg.size() + 1);
+        pdu->uiMsgType = 8888;
+        memcpy(pdu->caMsg, strMsg.toStdString().c_str(), strMsg.size());
+        m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }
+    else
+    {
+        QMessageBox::warning(this, "信息发送", "发送的信息不能为空");
+    }
 }
 
