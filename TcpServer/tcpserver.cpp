@@ -11,6 +11,7 @@ TcpServer::TcpServer(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::TcpServer)
 {
+    this->setFixedSize(380,250);
     ui->setupUi(this);
     loadConfig();
     MyTcpServer::getInstance().listen(QHostAddress(m_strIP), m_usPort);
