@@ -64,9 +64,9 @@ void TcpClient::on_send_pb_clicked()
     QString strMsg = ui->lineEdit->text();
     if (!strMsg.isEmpty())
     {
-        PDU* pdu = mkPDU(strMsg.size() + 1);
+        PDU* pdu = mkPDU(strMsg.toUtf8().size() + 1);
         pdu->uiMsgType = 8888;
-        memcpy(pdu->caMsg, strMsg.toStdString().c_str(), strMsg.size());
+        memcpy(pdu->caMsg, strMsg.toStdString().c_str(), strMsg.toUtf8().size());
         m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
