@@ -1,4 +1,4 @@
-QT       += core gui network
+QT       += core gui network sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,12 +12,14 @@ SOURCES += \
     main.cpp \
     mytcpserver.cpp \
     mytcpsocket.cpp \
+    operatordb.cpp \
     protocol.cpp \
     tcpserver.cpp
 
 HEADERS += \
     mytcpserver.h \
     mytcpsocket.h \
+    operatordb.h \
     protocol.h \
     tcpserver.h
 

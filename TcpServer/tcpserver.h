@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QString>
+#include "operatordb.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TcpServer; }
