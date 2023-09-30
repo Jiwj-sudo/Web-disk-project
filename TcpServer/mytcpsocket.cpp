@@ -1,6 +1,7 @@
 ﻿#include "mytcpsocket.h"
 #include "operatordb.h"
 #include <QDebug>
+#include <QStringList>
 
 MyTcpSocket::MyTcpSocket(QObject *parent)
     : QTcpSocket{parent}
@@ -25,7 +26,7 @@ void MyTcpSocket::recvMsg()
     this->read((char*)pdu+sizeof(uint), uiPDULen - sizeof(uint));
     switch(pdu->uiMsgType)
     {
-    case ENUM_MSG_TYPE_REGIST_REQUEST:
+    case ENUM_MSG_TYPE_REGIST_REQUEST:   //注册请求
     {
         char caName[32] = {0};
         char caPwd[32] = {0};
@@ -47,7 +48,7 @@ void MyTcpSocket::recvMsg()
         respdu = nullptr;
         break;
     }
-    case ENUM_MSG_TYPE_LOGIN_REQUEST:
+    case ENUM_MSG_TYPE_LOGIN_REQUEST:   //登录请求
     {
         char caName[32] = {0};
         char caPwd[32] = {0};
@@ -65,6 +66,23 @@ void MyTcpSocket::recvMsg()
         {
             strcpy(respdu->caData, LOGIN_FAILED);
         }
+        write((char*)respdu, respdu->uiPDULen);
+        free(respdu);
+        respdu = nullptr;
+        break;
+    }
+    case ENUM_MSG_TYPE_ALL_ONLINE_REQUEST:   //查看在线用户请求
+    {
+        QStringList ret = OperatorDB::getInstance().handleAllOnline();
+
+        uint uiMsgLen = ret.size() * 32;   //消息长度
+        PDU* respdu = mkPDU(uiMsgLen);
+        respdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;
+        for(int i = 0; i < ret.size(); i++)
+        {
+            memcpy((char*)(respdu->caMsg)+i*32, ret[i].toStdString().c_str(), ret[i].size());
+        }
+
         write((char*)respdu, respdu->uiPDULen);
         free(respdu);
         respdu = nullptr;

@@ -81,3 +81,19 @@ void OperatorDB::handleOffline(const char *name)
     QSqlQuery query;
     query.exec(data);
 }
+
+QStringList OperatorDB::handleAllOnline()
+{
+    QString data = QString("select name from userInfo where online=1");
+    QSqlQuery query;
+    query.exec(data);
+
+    QStringList result;  //结果保存在此
+    result.clear();
+
+    while (query.next())
+    {
+        result.append(query.value(0).toString());
+    }
+    return result;
+}

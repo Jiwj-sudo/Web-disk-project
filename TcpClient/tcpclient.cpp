@@ -9,8 +9,7 @@ TcpClient::TcpClient(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::TcpClient)
 {
-    // this->resize(100, 250);
-    // this->setFixedSize(380,250);
+    this->resize(360, 320);
     ui->setupUi(this);
     // 加载配置
     loadConfig();
@@ -58,6 +57,17 @@ void TcpClient::connectionServer()
     m_tcpSocket.connectToHost(QHostAddress(m_strIP), m_usPort);
 }
 
+TcpClient &TcpClient::getInstance()
+{
+    static TcpClient instance;
+    return instance;
+}
+
+QTcpSocket &TcpClient::getTcpSocket()
+{
+    return m_tcpSocket;
+}
+
 void TcpClient::showConnect()
 {
     QMessageBox::information(this, "连接服务器", "连接服务器成功");
@@ -99,6 +109,11 @@ void TcpClient::recvMsg()
         {
             QMessageBox::warning(this, "登录", LOGIN_FAILED);
         }
+        break;
+    }
+    case ENUM_MSG_TYPE_ALL_ONLINE_RESPOND:
+    {
+        OpeWidget::getInstance().getFriend()->showAllOnlineUser(pdu);
         break;
     }
     default:
@@ -150,7 +165,6 @@ void TcpClient::on_login_pb_clicked()
     }
 }
 
-
 void TcpClient::on_regist_pb_clicked()
 {
     QString strName = ui->name_le->text();
@@ -176,4 +190,3 @@ void TcpClient::on_cancel_pb_clicked()
 {
 
 }
-

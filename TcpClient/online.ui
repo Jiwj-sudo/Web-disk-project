@@ -23,36 +23,6 @@
          <pointsize>11</pointsize>
         </font>
        </property>
-       <item>
-        <property name="text">
-         <string>111</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>222</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>333</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>444</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>555</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>666</string>
-        </property>
-       </item>
       </widget>
      </item>
      <item>

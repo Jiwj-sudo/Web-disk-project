@@ -15,6 +15,7 @@ class Friend : public QWidget
     Q_OBJECT
 public:
     explicit Friend(QWidget *parent = nullptr);
+    void showAllOnlineUser(PDU* pdu);
 
 signals:
 
