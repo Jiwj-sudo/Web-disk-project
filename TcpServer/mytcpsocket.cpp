@@ -6,6 +6,12 @@ MyTcpSocket::MyTcpSocket(QObject *parent)
     : QTcpSocket{parent}
 {
     connect(this, &QTcpSocket::readyRead, this, &MyTcpSocket::recvMsg);
+    connect(this, &QTcpSocket::disconnected, this, &MyTcpSocket::clientOffline);
+}
+
+QString MyTcpSocket::getName()
+{
+    return m_strName;
 }
 
 void MyTcpSocket::recvMsg()
@@ -41,6 +47,29 @@ void MyTcpSocket::recvMsg()
         respdu = nullptr;
         break;
     }
+    case ENUM_MSG_TYPE_LOGIN_REQUEST:
+    {
+        char caName[32] = {0};
+        char caPwd[32] = {0};
+        strncpy(caName, pdu->caData, 32);
+        strncpy(caPwd, pdu->caData+32, 32);
+        bool ret = OperatorDB::getInstance().handleLogin(caName, caPwd);
+        PDU* respdu = mkPDU(0);
+        respdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_RESPOND;
+        if (ret)
+        {
+            strcpy(respdu->caData, LOGIN_OK);
+            m_strName = caName;
+        }
+        else
+        {
+            strcpy(respdu->caData, LOGIN_FAILED);
+        }
+        write((char*)respdu, respdu->uiPDULen);
+        free(respdu);
+        respdu = nullptr;
+        break;
+    }
     default:
         break;
     }
@@ -51,4 +80,10 @@ void MyTcpSocket::recvMsg()
 
     //qDebug() << caName << caPwd << pdu->uiMsgType;
     // qDebug() << pdu->uiMsgType << (char*)pdu->caMsg;
+}
+
+void MyTcpSocket::clientOffline()
+{
+    OperatorDB::getInstance().handleOffline(m_strName.toStdString().c_str());
+    emit offline(this);
 }

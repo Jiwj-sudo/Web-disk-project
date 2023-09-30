@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QTcpSocket>
 #include "protocol.h"
+#include "opewidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TcpClient; }

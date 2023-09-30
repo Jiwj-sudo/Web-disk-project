@@ -50,3 +50,34 @@ bool OperatorDB::handleRegist(const char *name, const char *pwd)
     QSqlQuery query;
     return query.exec(data);
 }
+
+bool OperatorDB::handleLogin(const char *name, const char *pwd)
+{
+    if (nullptr == name || nullptr == pwd)
+        return false;
+    QString data = QString("select * from userInfo where name=\'%1\' and pwd=\'%2\' and online=0").arg(name).arg(pwd);
+    QSqlQuery query;
+    query.exec(data);
+    if (query.next())
+    {
+        data = QString("update userInfo set online=1 where name=\'%1\' and pwd=\'%2\'").arg(name).arg(pwd);
+        // QSqlQuery query;
+        query.exec(data);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void OperatorDB::handleOffline(const char *name)
+{
+    if (nullptr == name)
+        return;
+
+    QString data = QString("update userInfo set online=0 where name=\'%1\'").arg(name);
+    QSqlQuery query;
+    query.exec(data);
+}

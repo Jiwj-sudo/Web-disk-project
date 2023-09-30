@@ -16,6 +16,9 @@ TcpClient::TcpClient(QWidget *parent)
     loadConfig();
     // 连接服务器
     connectionServer();
+
+    //回车键登录
+    connect(ui->pwd_le, &QLineEdit::returnPressed, this, &TcpClient::on_login_pb_clicked);
 }
 
 TcpClient::~TcpClient()
@@ -83,6 +86,21 @@ void TcpClient::recvMsg()
         }
         break;
     }
+    case ENUM_MSG_TYPE_LOGIN_RESPOND:
+    {
+        if(0 == strcmp(pdu->caData, LOGIN_OK))
+        {
+            QMessageBox::information(this, "登录", LOGIN_OK);
+            OpeWidget::getInstance().show();
+            //隐藏登录界面
+            this->hide();
+        }
+        else if (0 == strcmp(pdu->caData, LOGIN_FAILED))
+        {
+            QMessageBox::warning(this, "登录", LOGIN_FAILED);
+        }
+        break;
+    }
     default:
         break;
     }
@@ -114,7 +132,22 @@ void TcpClient::on_send_pb_clicked()
 
 void TcpClient::on_login_pb_clicked()
 {
-
+    QString strName = ui->name_le->text();
+    QString strPwd = ui->pwd_le->text();
+    if (!strName.isEmpty() && !strPwd.isEmpty())
+    {
+        PDU* pdu = mkPDU(0);
+        pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
+        strncpy(pdu->caData, strName.toStdString().c_str(), 32);
+        strncpy(pdu->caData+32, strPwd.toStdString().c_str(), 32);
+        m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }
+    else
+    {
+        QMessageBox::critical(this, "登录", "登录失败,用户名或密码错误!");
+    }
 }
 
 
