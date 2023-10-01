@@ -15,6 +15,96 @@ QString MyTcpSocket::getName()
     return m_strName;
 }
 
+//注册请求  回复
+void MyTcpSocket::RegistrationRequest(PDU *pdu)
+{
+    char caName[32] = {0};
+    char caPwd[32] = {0};
+    strncpy(caName, pdu->caData, 32);
+    strncpy(caPwd, pdu->caData+32, 32);
+    bool ret = OperatorDB::getInstance().handleRegist(caName, caPwd);
+    PDU* respdu = mkPDU(0);
+    respdu->uiMsgType = ENUM_MSG_TYPE_REGIST_RESPOND;
+    if (ret)
+    {
+        strcpy(respdu->caData, REGIST_OK);
+    }
+    else
+    {
+        strcpy(respdu->caData, REGIST_FAILED);
+    }
+    write((char*)respdu, respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
+void MyTcpSocket::LoginRequest(PDU *pdu)
+{
+    char caName[32] = {0};
+    char caPwd[32] = {0};
+    strncpy(caName, pdu->caData, 32);
+    strncpy(caPwd, pdu->caData+32, 32);
+    bool ret = OperatorDB::getInstance().handleLogin(caName, caPwd);
+    PDU* respdu = mkPDU(0);
+    respdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_RESPOND;
+    if (ret)
+    {
+        strcpy(respdu->caData, LOGIN_OK);
+        m_strName = caName;
+    }
+    else
+    {
+        strcpy(respdu->caData, LOGIN_FAILED);
+    }
+    write((char*)respdu, respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
+void MyTcpSocket::OnlineUserRequests()
+{
+    QStringList ret = OperatorDB::getInstance().handleAllOnline();
+
+    uint uiMsgLen = ret.size() * 32;   //消息长度
+    PDU* respdu = mkPDU(uiMsgLen);
+    respdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;
+    for(int i = 0; i < ret.size(); i++)
+    {
+        memcpy((char*)(respdu->caMsg)+i*32, ret[i].toStdString().c_str(), ret[i].size());
+    }
+
+    write((char*)respdu, respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
+void MyTcpSocket::FindUserRequest(PDU *pdu)
+{
+    int ret = OperatorDB::getInstance().handleSearchUser(pdu->caData);
+    PDU* respdu = mkPDU(0);
+    respdu->uiMsgType = ENUM_MSG_TYPE_SEARCH_USER_RESPOND;
+    if (-1 == ret)
+    {
+        strncpy(respdu->caData, SEARCH_USER_NO, 64);
+    }
+    else if (1 == ret)
+    {
+        strncpy(respdu->caData, SEARCH_USER_ONLINE, 64);
+    }
+    else if (0 == ret)
+    {
+        strncpy(respdu->caData, SEARCH_USER_OFFLINE, 64);
+    }
+    else
+    {
+        strncpy(respdu->caData, "Unknown error occurred", 64);
+    }
+
+    write((char*)respdu, respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
 void MyTcpSocket::recvMsg()
 {
     qDebug() << this->bytesAvailable();
@@ -27,67 +117,17 @@ void MyTcpSocket::recvMsg()
     switch(pdu->uiMsgType)
     {
     case ENUM_MSG_TYPE_REGIST_REQUEST:   //注册请求
-    {
-        char caName[32] = {0};
-        char caPwd[32] = {0};
-        strncpy(caName, pdu->caData, 32);
-        strncpy(caPwd, pdu->caData+32, 32);
-        bool ret = OperatorDB::getInstance().handleRegist(caName, caPwd);
-        PDU* respdu = mkPDU(0);
-        respdu->uiMsgType = ENUM_MSG_TYPE_REGIST_RESPOND;
-        if (ret)
-        {
-            strcpy(respdu->caData, REGIST_OK);
-        }
-        else
-        {
-            strcpy(respdu->caData, REGIST_FAILED);
-        }
-        write((char*)respdu, respdu->uiPDULen);
-        free(respdu);
-        respdu = nullptr;
+        RegistrationRequest(pdu);
         break;
-    }
     case ENUM_MSG_TYPE_LOGIN_REQUEST:   //登录请求
-    {
-        char caName[32] = {0};
-        char caPwd[32] = {0};
-        strncpy(caName, pdu->caData, 32);
-        strncpy(caPwd, pdu->caData+32, 32);
-        bool ret = OperatorDB::getInstance().handleLogin(caName, caPwd);
-        PDU* respdu = mkPDU(0);
-        respdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_RESPOND;
-        if (ret)
-        {
-            strcpy(respdu->caData, LOGIN_OK);
-            m_strName = caName;
-        }
-        else
-        {
-            strcpy(respdu->caData, LOGIN_FAILED);
-        }
-        write((char*)respdu, respdu->uiPDULen);
-        free(respdu);
-        respdu = nullptr;
+        LoginRequest(pdu);
         break;
-    }
     case ENUM_MSG_TYPE_ALL_ONLINE_REQUEST:   //查看在线用户请求
-    {
-        QStringList ret = OperatorDB::getInstance().handleAllOnline();
-
-        uint uiMsgLen = ret.size() * 32;   //消息长度
-        PDU* respdu = mkPDU(uiMsgLen);
-        respdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;
-        for(int i = 0; i < ret.size(); i++)
-        {
-            memcpy((char*)(respdu->caMsg)+i*32, ret[i].toStdString().c_str(), ret[i].size());
-        }
-
-        write((char*)respdu, respdu->uiPDULen);
-        free(respdu);
-        respdu = nullptr;
+        OnlineUserRequests();
         break;
-    }
+    case ENUM_MSG_TYPE_SEARCH_USER_REQUEST:
+        FindUserRequest(pdu);
+        break;
     default:
         break;
     }

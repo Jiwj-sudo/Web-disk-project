@@ -68,6 +68,62 @@ QTcpSocket &TcpClient::getTcpSocket()
     return m_tcpSocket;
 }
 
+void TcpClient::RegistrationReply(PDU *pdu)
+{
+    if(0 == strcmp(pdu->caData, REGIST_OK))
+    {
+        QMessageBox::information(this, "注册", REGIST_OK);
+    }
+    else if (0 == strcmp(pdu->caData, REGIST_FAILED))
+    {
+        QMessageBox::warning(this, "注册", REGIST_FAILED);
+    }
+}
+
+void TcpClient::LoginReply(PDU* pdu)
+{
+    if(0 == strcmp(pdu->caData, LOGIN_OK))
+    {
+        QMessageBox::information(this, "登录", LOGIN_OK);
+        OpeWidget::getInstance().show();
+        //隐藏登录界面
+        this->hide();
+    }
+    else if (0 == strcmp(pdu->caData, LOGIN_FAILED))
+    {
+        QMessageBox::warning(this, "登录", LOGIN_FAILED);
+    }
+}
+
+void TcpClient::AllOnlineReply(PDU *pdu)
+{
+    OpeWidget::getInstance().getFriend()->showAllOnlineUser(pdu);
+}
+
+void TcpClient::SearchUserReply(PDU *pdu)
+{
+    if (0 == strcmp(SEARCH_USER_NO, pdu->caData))
+    {
+        QMessageBox::information(this, "搜索",
+                                QString("%1: not exist").arg(OpeWidget::getInstance().getFriend()->m_strSearchName));
+    }
+    else if (0 == strcmp(SEARCH_USER_ONLINE, pdu->caData))
+    {
+        QMessageBox::information(this, "搜索",
+                                QString("%1: online").arg(OpeWidget::getInstance().getFriend()->m_strSearchName));
+    }
+    else if (0 == strcmp(SEARCH_USER_OFFLINE, pdu->caData))
+    {
+        QMessageBox::information(this, "搜索",
+                                QString("%1: offline").arg(OpeWidget::getInstance().getFriend()->m_strSearchName));
+    }
+    else
+    {
+        QMessageBox::information(this, "搜索",
+                                QString("%1: Unknown error occurred").arg(OpeWidget::getInstance().getFriend()->m_strSearchName));
+    }
+}
+
 void TcpClient::showConnect()
 {
     QMessageBox::information(this, "连接服务器", "连接服务器成功");
@@ -82,40 +138,21 @@ void TcpClient::recvMsg()
 
     PDU* pdu = mkPDU(uiMsgLen);
     m_tcpSocket.read((char*)pdu+sizeof(uint), uiPDULen - sizeof(uint));
+
     switch(pdu->uiMsgType)
     {
-    case ENUM_MSG_TYPE_REGIST_RESPOND:
-    {
-        if(0 == strcmp(pdu->caData, REGIST_OK))
-        {
-            QMessageBox::information(this, "注册", REGIST_OK);
-        }
-        else if (0 == strcmp(pdu->caData, REGIST_FAILED))
-        {
-            QMessageBox::warning(this, "注册", REGIST_FAILED);
-        }
+    case ENUM_MSG_TYPE_REGIST_RESPOND: //注册回复
+        RegistrationReply(pdu);
         break;
-    }
-    case ENUM_MSG_TYPE_LOGIN_RESPOND:
-    {
-        if(0 == strcmp(pdu->caData, LOGIN_OK))
-        {
-            QMessageBox::information(this, "登录", LOGIN_OK);
-            OpeWidget::getInstance().show();
-            //隐藏登录界面
-            this->hide();
-        }
-        else if (0 == strcmp(pdu->caData, LOGIN_FAILED))
-        {
-            QMessageBox::warning(this, "登录", LOGIN_FAILED);
-        }
+    case ENUM_MSG_TYPE_LOGIN_RESPOND:  //登录回复
+        LoginReply(pdu);
         break;
-    }
-    case ENUM_MSG_TYPE_ALL_ONLINE_RESPOND:
-    {
-        OpeWidget::getInstance().getFriend()->showAllOnlineUser(pdu);
+    case ENUM_MSG_TYPE_ALL_ONLINE_RESPOND:  //显示在线用户回复
+        AllOnlineReply(pdu);
         break;
-    }
+    case ENUM_MSG_TYPE_SEARCH_USER_RESPOND: //搜索用户回复
+        SearchUserReply(pdu);
+        break;
     default:
         break;
     }
@@ -153,6 +190,7 @@ void TcpClient::on_login_pb_clicked()
     {
         PDU* pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
+        //将用户名和密码放到caData中，服务器通过caData获取用户名和密码
         strncpy(pdu->caData, strName.toStdString().c_str(), 32);
         strncpy(pdu->caData+32, strPwd.toStdString().c_str(), 32);
         m_tcpSocket.write((char*)pdu, pdu->uiPDULen);

@@ -23,6 +23,10 @@ public:
 
     static TcpClient& getInstance();
     QTcpSocket& getTcpSocket();
+    void RegistrationReply(PDU* pdu);
+    void LoginReply(PDU* pdu);
+    void AllOnlineReply(PDU* pdu);
+    void SearchUserReply(PDU* pdu);
 
 public slots:
     void showConnect();

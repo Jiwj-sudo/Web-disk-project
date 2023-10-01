@@ -97,3 +97,28 @@ QStringList OperatorDB::handleAllOnline()
     }
     return result;
 }
+
+int OperatorDB::handleSearchUser(const char *name)
+{
+    if (nullptr == name)
+        return -1;
+    QString data = QString("select online from userInfo where name=\'%1\'").arg(name);
+    QSqlQuery query;
+    query.exec(data);
+    if (query.next())
+    {
+        int ret = query.value(0).toInt();
+        if (1 == ret)
+        {
+            return 1;
+        }
+        else if (0 == ret)
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return -1;
+    }
+}

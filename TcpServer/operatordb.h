@@ -19,6 +19,7 @@ public:
     bool handleLogin(const char* name, const char* pwd);
     void handleOffline(const char* name);
     QStringList handleAllOnline();
+    int handleSearchUser(const char* name);
 
 signals:
 private:

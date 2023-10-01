@@ -9,8 +9,13 @@ typedef unsigned int uint;
 
 #define REGIST_OK "regist ok"
 #define REGIST_FAILED "regist failed : name existed"
+
 #define LOGIN_OK "login ok"
 #define LOGIN_FAILED "regist failed : name error or pwd error or relogin"
+
+#define SEARCH_USER_NO "No such people"
+#define SEARCH_USER_ONLINE "online"
+#define SEARCH_USER_OFFLINE "offline"
 
 enum ENUM_MSG_TYPE
 {

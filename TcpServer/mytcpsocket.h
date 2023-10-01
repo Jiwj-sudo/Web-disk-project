@@ -11,6 +11,10 @@ class MyTcpSocket : public QTcpSocket
 public:
     explicit MyTcpSocket(QObject *parent = nullptr);
     QString getName();
+    void RegistrationRequest(PDU* pdu);
+    void LoginRequest(PDU* pdu);
+    void OnlineUserRequests();
+    void FindUserRequest(PDU* pdu);
 
 signals:
     void offline(MyTcpSocket* mysocket);
