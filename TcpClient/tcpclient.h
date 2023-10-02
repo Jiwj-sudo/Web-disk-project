@@ -29,6 +29,7 @@ public:
     void AllOnlineReply(PDU* pdu);
     void SearchUserReply(PDU* pdu);
     void AddFriendReqReply(PDU* pdu);
+    void FlushFriendReply(PDU* pdu);
 
     QString getLoginName();
 

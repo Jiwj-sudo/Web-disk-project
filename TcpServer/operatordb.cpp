@@ -183,3 +183,31 @@ void OperatorDB::handleAddFriendAgree(const char *perName, const char *Name)
     QSqlQuery query;
     query.exec(data);
 }
+
+QStringList OperatorDB::handleFlushFriend(const char *name)
+{
+    QStringList strFriendList;
+    strFriendList.clear();
+
+    if (nullptr == name)
+        return strFriendList;
+
+    QString data = QString("select name from userInfo where online=1 and id in (select id from friend where friendId=(select id from userInfo where name=\'%1\'))").arg(name);
+    QSqlQuery query;
+    query.exec(data);
+    while (query.next())
+    {
+        strFriendList.append(query.value(0).toString());
+        // qDebug() << query.value(0).toString();
+    }
+
+    data = QString("select name from userInfo where online=1 and id in (select friendId from friend where id=(select id from userInfo where name=\'%1\'))").arg(name);
+    query.exec(data);
+    while (query.next())
+    {
+        strFriendList.append(query.value(0).toString());
+        // qDebug() << query.value(0).toString();
+    }
+
+    return strFriendList;
+}

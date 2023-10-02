@@ -161,6 +161,11 @@ void TcpClient::AddFriendReqReply(PDU *pdu)
     respdu = nullptr;
 }
 
+void TcpClient::FlushFriendReply(PDU *pdu)
+{
+    OpeWidget::getInstance().getFriend()->updateFriendList(pdu);
+}
+
 QString TcpClient::getLoginName()
 {
     return m_strLoginName;
@@ -206,6 +211,9 @@ void TcpClient::recvMsg()
         break;
     case ENUM_MSG_TYPE_FRIEND_REFUSE_RESPOND:
         QMessageBox::information(this, QString("%1回复").arg(pdu->caData), QString("对方拒绝了你的好友请求"));
+        break;
+    case ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:    //刷新好友 回复
+        FlushFriendReply(pdu);
         break;
     default:
         break;

@@ -195,9 +195,28 @@ void MyTcpSocket::AddFriendRefuse(PDU *pdu)
     respdu = nullptr;
 }
 
+void MyTcpSocket::FlushFriendRequest(PDU *pdu)
+{
+    char caName[32] = {0};
+    strncpy(caName, pdu->caData, 32);
+    QStringList ret = OperatorDB::getInstance().handleFlushFriend(caName);
+
+    uint uiMsgLen = ret.size() * 32;
+    PDU* respdu = mkPDU(uiMsgLen);
+    respdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND;
+    for (int i = 0; i < ret.size(); i++)
+    {
+        strncpy(reinterpret_cast<char*>(respdu->caMsg) + i*32, ret[i].toUtf8().toStdString().c_str(), 32);
+    }
+
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
 void MyTcpSocket::recvMsg()
 {
-    qDebug() << this->bytesAvailable();
+    // qDebug() << this->bytesAvailable();
     uint uiPDULen = 0;
     this->read((char*)&uiPDULen, sizeof(uint));
     uint uiMsgLen = uiPDULen - sizeof(PDU);
@@ -226,6 +245,9 @@ void MyTcpSocket::recvMsg()
         break;
     case ENUM_MSG_TYPE_ADD_FRIEND_REFUSE:   //加好友拒绝
         AddFriendRefuse(pdu);
+    case ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST:   //刷新用户请求
+        FlushFriendRequest(pdu);
+        break;
     default:
         break;
     }

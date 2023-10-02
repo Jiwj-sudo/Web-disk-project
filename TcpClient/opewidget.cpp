@@ -1,8 +1,10 @@
 ﻿#include "opewidget.h"
+#include "tcpclient.h"
 
 OpeWidget::OpeWidget(QWidget *parent)
     : QWidget{parent}
 {
+    this->setWindowTitle(QString("你好, %1").arg(TcpClient::getInstance().getLoginName()));
     this->resize(820, 610);
     m_pListW = new QListWidget(this);
     m_pListW->addItem("好友");
