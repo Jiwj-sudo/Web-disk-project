@@ -18,6 +18,9 @@ public:
 
     void showUser(PDU* pdu);
 
+private slots:
+    void on_add_pb_clicked();
+
 private:
     Ui::Online *ui;
 };

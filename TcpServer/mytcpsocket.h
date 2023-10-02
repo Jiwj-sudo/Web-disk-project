@@ -15,6 +15,9 @@ public:
     void LoginRequest(PDU* pdu);
     void OnlineUserRequests();
     void FindUserRequest(PDU* pdu);
+    void AddFriendRequest(PDU* pdu);
+    void AddFriendAgree(PDU* pdu);
+    void AddFriendRefuse(PDU* pdu);
 
 signals:
     void offline(MyTcpSocket* mysocket);

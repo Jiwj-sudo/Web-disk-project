@@ -18,17 +18,35 @@ typedef unsigned int uint;
 #define SEARCH_USER_ONLINE "online"
 #define SEARCH_USER_OFFLINE "offline"
 
+#define UNKONOW_ERROR "unknow error"
+#define EXISTED_FRIEND "friend exist"
+#define ADD_FRIEND_OFFLINE "user offline"
+#define ADD_FRIEND_NOEXIST "user not exist"
+#define ADD_FRIEND_SELF_ADD_SELF "can not self add self"
+
 enum ENUM_MSG_TYPE
 {
     ENUM_MSG_TYPE_MIN = 0,
     ENUM_MSG_TYPE_REGIST_REQUEST,    //注册请求
     ENUM_MSG_TYPE_REGIST_RESPOND,    //注册回复
+
     ENUM_MSG_TYPE_LOGIN_REQUEST,     //登录请求
     ENUM_MSG_TYPE_LOGIN_RESPOND,     //登录回复
+
     ENUM_MSG_TYPE_ALL_ONLINE_REQUEST,     //在线用户请求
     ENUM_MSG_TYPE_ALL_ONLINE_RESPOND,     //在线用户回复
+
     ENUM_MSG_TYPE_SEARCH_USER_REQUEST,     //搜索用户用户请求
     ENUM_MSG_TYPE_SEARCH_USER_RESPOND,     //搜索用户回复
+
+    ENUM_MSG_TYPE_ADD_FRIEND_REQUEST,      //加友好请求
+    ENUM_MSG_TYPE_ADD_FRIEND_RESPOND,      //加友好回复
+
+    ENUM_MSG_TYPE_ADD_FRIEND_AGGREE,       //同意添加好友
+    ENUM_MSG_TYPE_ADD_FRIEND_REFUSE,       //拒绝添加好友
+
+    ENUM_MSG_TYPE_FRIEND_AGREE_RESPOND,    //好友同意 回复
+    ENUM_MSG_TYPE_FRIEND_REFUSE_RESPOND,   //好友拒绝 回复
     ENUM_MSG_TYPE_MAX = 0x00ffffff,
 };
 

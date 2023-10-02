@@ -55,6 +55,7 @@ bool OperatorDB::handleLogin(const char *name, const char *pwd)
 {
     if (nullptr == name || nullptr == pwd)
         return false;
+
     QString data = QString("select * from userInfo where name=\'%1\' and pwd=\'%2\' and online=0").arg(name).arg(pwd);
     QSqlQuery query;
     query.exec(data);
@@ -102,6 +103,7 @@ int OperatorDB::handleSearchUser(const char *name)
 {
     if (nullptr == name)
         return -1;
+
     QString data = QString("select online from userInfo where name=\'%1\'").arg(name);
     QSqlQuery query;
     query.exec(data);
@@ -121,4 +123,63 @@ int OperatorDB::handleSearchUser(const char *name)
     {
         return -1;
     }
+}
+
+int OperatorDB::handleAddFriend(const char *perName, const char *Name)
+{
+    if (nullptr == perName || nullptr == Name)
+        return -1;
+
+    if (0 == strcmp(perName, Name))  //自己加自己
+        return -2;
+
+    //是否是自己的好友
+    QString data = QString("select * from friend where (id=(select id from userInfo where name=\'%1\') and friendId=(select id from userInfo where name=\'%2\')) "
+                           "or (id=(select id from userInfo where name=\'%3\') and friendId=(select id from userInfo where name=\'%4\'))").arg(perName).arg(Name).arg(Name).arg(perName);
+
+    qDebug() << data;
+    QSqlQuery query;
+    query.exec(data);
+    if (query.next())
+    {
+        return 0;   //双方已经是好友
+    }
+    else
+    {
+        data = QString("select online from userInfo where name=\'%1\'").arg(perName);
+        QSqlQuery query;
+        query.exec(data);
+        if (query.next())
+        {
+            int ret = query.value(0).toInt();
+            if (1 == ret)
+            {
+                return 1;  //在线
+            }
+            else if (0 == ret)
+            {
+                return 2;  //不在线
+            }
+        }
+        else
+        {
+            return 3;    //不存在
+        }
+    }
+}
+
+void OperatorDB::handleAddFriendAgree(const char *perName, const char *Name)
+{
+    if (nullptr == perName || nullptr == Name)
+    {
+        qInfo()<<"handleADDFriendAgree function name or pername is nullptr ";
+        return ;
+    }
+    qDebug() << perName << Name;
+    QString data = QString("insert into friend (id,friendId) values((select id from userInfo where name=\'%1\') "
+                           ",(select id from userInfo where name=\'%2\')) ").arg(perName).arg(Name);
+
+    qDebug() << data;
+    QSqlQuery query;
+    query.exec(data);
 }

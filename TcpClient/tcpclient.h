@@ -23,10 +23,14 @@ public:
 
     static TcpClient& getInstance();
     QTcpSocket& getTcpSocket();
+
     void RegistrationReply(PDU* pdu);
     void LoginReply(PDU* pdu);
     void AllOnlineReply(PDU* pdu);
     void SearchUserReply(PDU* pdu);
+    void AddFriendReqReply(PDU* pdu);
+
+    QString getLoginName();
 
 public slots:
     void showConnect();
@@ -44,5 +48,7 @@ private:
     quint16 m_usPort;
     //连接服务器,和服务器进行数据交互
     QTcpSocket m_tcpSocket;
+
+    QString m_strLoginName;
 };
 #endif // TCPCLIENT_H
