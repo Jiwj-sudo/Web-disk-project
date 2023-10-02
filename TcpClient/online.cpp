@@ -41,8 +41,8 @@ void Online::on_add_pb_clicked()
     PDU* pdu = mkPDU(0);
 
     pdu->uiMsgType = ENUM_MSG_TYPE_ADD_FRIEND_REQUEST;
-    strncpy(pdu->caData, strPerUserName.toStdString().c_str(), 32);
-    strncpy(pdu->caData + 32, strLoginName.toStdString().c_str(), 32);
+    strncpy(pdu->caData, strPerUserName.toUtf8().toStdString().c_str(), 32);
+    strncpy(pdu->caData + 32, strLoginName.toUtf8().toStdString().c_str(), 32);
     //qDebug() << pdu->caData << " " << pdu->caData+32;
     TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
     free(pdu);

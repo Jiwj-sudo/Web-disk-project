@@ -72,7 +72,7 @@ void MyTcpSocket::OnlineUserRequests()
     respdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;
     for(int i = 0; i < ret.size(); i++)
     {
-        memcpy(reinterpret_cast<char*>(respdu->caMsg)+i*32, ret[i].toStdString().c_str(), ret[i].size());
+        memcpy(reinterpret_cast<char*>(respdu->caMsg)+i*32, ret[i].toStdString().c_str(), ret[i].toUtf8().size()+1);
     }
 
     write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
@@ -118,6 +118,11 @@ void MyTcpSocket::AddFriendRequest(PDU *pdu)
 
     PDU* respdu = nullptr;
 
+    /*
+     *判断好友是否已经是好友，加的是否是自己本身
+     * 判断是否是在线
+     * 在线处理
+    */
     if (-2 == ret)
     {
         respdu = mkPDU(0);

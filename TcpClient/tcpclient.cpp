@@ -247,9 +247,9 @@ void TcpClient::on_login_pb_clicked()
         PDU* pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
         //将用户名和密码放到caData中，服务器通过caData获取用户名和密码
-        strncpy(pdu->caData, strName.toStdString().c_str(), 32);
-        strncpy(pdu->caData+32, strPwd.toStdString().c_str(), 32);
-        m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
+        strncpy(pdu->caData, strName.toUtf8().toStdString().c_str(), 32);
+        strncpy(pdu->caData+32, strPwd.toUtf8().toStdString().c_str(), 32);
+        m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
     }
@@ -267,9 +267,9 @@ void TcpClient::on_regist_pb_clicked()
     {
         PDU* pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_REGIST_REQUEST;
-        strncpy(pdu->caData, strName.toStdString().c_str(), 32);
-        strncpy(pdu->caData+32, strPwd.toStdString().c_str(), 32);
-        m_tcpSocket.write((char*)pdu, pdu->uiPDULen);
+        strncpy(pdu->caData, strName.toUtf8().toStdString().c_str(), 32);
+        strncpy(pdu->caData+32, strPwd.toUtf8().toStdString().c_str(), 32);
+        m_tcpSocket.write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
     }

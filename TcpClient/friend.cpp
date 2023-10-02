@@ -64,8 +64,8 @@ void Friend::searchUser()
         qDebug() << m_strSearchName;
         PDU* pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_SEARCH_USER_REQUEST;
-        strncpy(pdu->caData, m_strSearchName.toStdString().c_str(), 32);
-        TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
+        strncpy(pdu->caData, m_strSearchName.toUtf8().toStdString().c_str(), 32);
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
     }
@@ -79,7 +79,7 @@ void Friend::showOnline()
 
         PDU* pdu = mkPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_REQUEST;
-        TcpClient::getInstance().getTcpSocket().write((char*)pdu, pdu->uiPDULen);
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
     }
