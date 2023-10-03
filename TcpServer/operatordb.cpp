@@ -62,7 +62,6 @@ bool OperatorDB::handleLogin(const char *name, const char *pwd)
     if (query.next())
     {
         data = QString("update userInfo set online=1 where name=\'%1\' and pwd=\'%2\'").arg(name).arg(pwd);
-        // QSqlQuery query;
         query.exec(data);
 
         return true;
@@ -137,7 +136,7 @@ int OperatorDB::handleAddFriend(const char *perName, const char *Name)
     QString data = QString("select * from friend where (id=(select id from userInfo where name=\'%1\') and friendId=(select id from userInfo where name=\'%2\')) "
                            "or (id=(select id from userInfo where name=\'%3\') and friendId=(select id from userInfo where name=\'%4\'))").arg(perName).arg(Name).arg(Name).arg(perName);
 
-    qDebug() << data;
+    // qDebug() << data;
     QSqlQuery query;
     query.exec(data);
     if (query.next())
@@ -175,11 +174,11 @@ void OperatorDB::handleAddFriendAgree(const char *perName, const char *Name)
         qInfo()<<"handleADDFriendAgree function name or pername is nullptr ";
         return ;
     }
-    qDebug() << perName << Name;
+    // qDebug() << perName << Name;
     QString data = QString("insert into friend (id,friendId) values((select id from userInfo where name=\'%1\') "
                            ",(select id from userInfo where name=\'%2\')) ").arg(perName).arg(Name);
 
-    qDebug() << data;
+    // qDebug() << data;
     QSqlQuery query;
     query.exec(data);
 }
@@ -210,4 +209,34 @@ QStringList OperatorDB::handleFlushFriend(const char *name)
     }
 
     return strFriendList;
+}
+
+bool OperatorDB::handleDelFriend(const char *name, const char *friendName)
+{
+    if (nullptr == name || nullptr == friendName)
+        return false;
+
+    QString name_id = QString("select id from userInfo where name=\'%1\'").arg(name);
+    QString friendName_id = QString("select id from userInfo where name=\'%1\'").arg(friendName);
+
+    QSqlQuery query;
+
+    query.exec(name_id);
+    if(query.next())
+        name_id = query.value(0).toString();
+    else
+        return false;
+
+    query.exec(friendName_id);
+    if(query.next())
+        friendName_id = query.value(0).toString();
+    else
+        return false;
+
+    QString data = QString("delete from friend where id=%1 and friendId=%2").arg(name_id).arg(friendName_id);
+    query.exec(data);
+
+    data = QString("delete from friend where id=%1 and friendId=%2").arg(friendName_id).arg(name_id);
+    query.exec(data);
+    return true;
 }

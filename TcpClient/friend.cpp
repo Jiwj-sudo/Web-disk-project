@@ -47,6 +47,7 @@ Friend::Friend(QWidget *parent)
     connect(m_pShowOnlineUserPB, &QPushButton::clicked, this, &Friend::showOnline);
     connect(m_pSearchUserPB, &QPushButton::clicked, this, &Friend::searchUser);
     connect(m_pFlushFriendPB, &QPushButton::clicked, this, &Friend::flushFriend);
+    connect(m_pDelFriendPB, &QPushButton::clicked, this, &Friend::delFriend);
 }
 
 void Friend::showAllOnlineUser(PDU *pdu)
@@ -62,6 +63,7 @@ void Friend::updateFriendList(PDU *pdu)
     if (nullptr == pdu)
         return;
 
+    m_pFriendListWidget->clear();
     uint uisize = pdu->uiMsgLen / 32;
     char caName[32] = {0};
     for (uint i = 0; i < uisize; i++)
@@ -92,6 +94,27 @@ void Friend::flushFriend()
     PDU* pdu = mkPDU(0);
     pdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST;
     strncpy(pdu->caData, strName.toUtf8().toStdString().c_str(), strName.toUtf8().size());
+    TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+    free(pdu);
+    pdu = nullptr;
+}
+
+void Friend::delFriend()
+{
+    if (nullptr == m_pFriendListWidget->currentItem())
+        return;
+
+    //要删除的好友名字
+    QString delName = m_pFriendListWidget->currentItem()->text();
+    PDU* pdu = mkPDU(0);
+    pdu->uiMsgType = ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST;
+
+    //自己的名字
+    QString MyName = TcpClient::getInstance().getLoginName();
+
+    strncpy(pdu->caData, MyName.toUtf8().toStdString().c_str(), 32);
+    strncpy(pdu->caData + 32, delName.toUtf8().toStdString().c_str(), 32);
+
     TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
     free(pdu);
     pdu = nullptr;

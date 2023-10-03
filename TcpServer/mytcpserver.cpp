@@ -53,8 +53,8 @@ void MyTcpServer::deleteSocket(MyTcpSocket *mysocket)
         }
     }
 
-    for (int i = 0; i < m_tcpSocketList.size(); i++)
-    {
-        qDebug() << m_tcpSocketList[i]->getName();
-    }
+//    for (int i = 0; i < m_tcpSocketList.size(); i++)
+//    {
+//        qDebug() << m_tcpSocketList[i]->getName();
+//    }
 }

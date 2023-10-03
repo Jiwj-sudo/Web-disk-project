@@ -188,7 +188,7 @@ void MyTcpSocket::AddFriendRefuse(PDU *pdu)
     strncpy(caName, pdu->caData + 32, 32);
 
     PDU* respdu = mkPDU(0);
-    respdu->uiMsgType = ENUM_MSG_TYPE_FRIEND_AGREE_RESPOND;
+    respdu->uiMsgType = ENUM_MSG_TYPE_FRIEND_REFUSE_RESPOND;
 
     MyTcpServer::getInstance().resend(caName,respdu);
     free(respdu);
@@ -212,6 +212,25 @@ void MyTcpSocket::FlushFriendRequest(PDU *pdu)
     write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
     free(respdu);
     respdu = nullptr;
+}
+
+void MyTcpSocket::DeleteFriendRequest(PDU *pdu)
+{
+    char name[32] = {0};
+    char delName[32] = {0};
+    strncpy(name, pdu->caData, 32);
+    strncpy(delName, pdu->caData + 32, 32);
+    OperatorDB::getInstance().handleDelFriend(name, delName);
+
+    PDU* respdu = mkPDU(0);
+    respdu->uiMsgType = ENUM_MSG_TYPE_DELETE_FRIEND_RESPOND;
+    strcpy(reinterpret_cast<char*>(respdu->caData), DEL_FRIEND_OK);
+
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+
+    MyTcpServer::getInstance().resend(delName, pdu);
 }
 
 void MyTcpSocket::recvMsg()
@@ -248,15 +267,15 @@ void MyTcpSocket::recvMsg()
     case ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST:   //刷新用户请求
         FlushFriendRequest(pdu);
         break;
+    case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST:   //删除好友请求
+        DeleteFriendRequest(pdu);
+        break;
     default:
         break;
     }
 
     free(pdu);
     pdu = nullptr;
-
-    //qDebug() << caName << caPwd << pdu->uiMsgType;
-    // qDebug() << pdu->uiMsgType << (char*)pdu->caMsg;
 }
 
 void MyTcpSocket::clientOffline()

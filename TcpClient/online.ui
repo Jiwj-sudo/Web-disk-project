@@ -23,16 +23,6 @@
          <pointsize>11</pointsize>
         </font>
        </property>
-       <item>
-        <property name="text">
-         <string>1111</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>2222</string>
-        </property>
-       </item>
       </widget>
      </item>
      <item>

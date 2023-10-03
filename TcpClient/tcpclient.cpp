@@ -9,8 +9,8 @@ TcpClient::TcpClient(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::TcpClient)
 {
-    this->resize(360, 320);
     ui->setupUi(this);
+    this->resize(370, 270);
     // 加载配置
     loadConfig();
     // 连接服务器
@@ -159,11 +159,20 @@ void TcpClient::AddFriendReqReply(PDU *pdu)
     m_tcpSocket.write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
     free(respdu);
     respdu = nullptr;
+
+    OpeWidget::getInstance().getFriend()->flushFriend();
 }
 
 void TcpClient::FlushFriendReply(PDU *pdu)
 {
     OpeWidget::getInstance().getFriend()->updateFriendList(pdu);
+}
+
+void TcpClient::DelFriendReply()
+{
+    QMessageBox::information(this, "删除", "删除好友成功");
+    // 收到回复后直接刷新好友列表
+    OpeWidget::getInstance().getFriend()->flushFriend();
 }
 
 QString TcpClient::getLoginName()
@@ -178,7 +187,7 @@ void TcpClient::showConnect()
 
 void TcpClient::recvMsg()
 {
-    qDebug() << m_tcpSocket.bytesAvailable();
+    //qDebug() << m_tcpSocket.bytesAvailable();
     uint uiPDULen = 0;
     m_tcpSocket.read((char*)&uiPDULen, sizeof(uint));
     uint uiMsgLen = uiPDULen - sizeof(PDU);
@@ -208,12 +217,20 @@ void TcpClient::recvMsg()
         break;
     case ENUM_MSG_TYPE_FRIEND_AGREE_RESPOND:
         QMessageBox::information(this, QString("%1回复").arg(pdu->caData), QString("对方同意了你的好友请求"));
+        OpeWidget::getInstance().getFriend()->flushFriend();
         break;
     case ENUM_MSG_TYPE_FRIEND_REFUSE_RESPOND:
         QMessageBox::information(this, QString("%1回复").arg(pdu->caData), QString("对方拒绝了你的好友请求"));
         break;
-    case ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:    //刷新好友 回复
+    case ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:    //刷新好友回复
         FlushFriendReply(pdu);
+        break;
+    case ENUM_MSG_TYPE_DELETE_FRIEND_RESPOND:   //删除好友回复
+        DelFriendReply();
+        break;
+    case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST:   //删除好友的申请提示
+        QMessageBox::information(this, "删除", QString("%1 已将你删除").arg(reinterpret_cast<char*>(pdu->caData)));
+        OpeWidget::getInstance().getFriend()->flushFriend();
         break;
     default:
         break;

@@ -30,6 +30,7 @@ public:
     void SearchUserReply(PDU* pdu);
     void AddFriendReqReply(PDU* pdu);
     void FlushFriendReply(PDU* pdu);
+    void DelFriendReply();
 
     QString getLoginName();
 

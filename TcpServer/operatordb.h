@@ -23,6 +23,7 @@ public:
     int handleAddFriend(const char* perName, const char* Name);
     void handleAddFriendAgree(const char* perName, const char* Name);
     QStringList handleFlushFriend(const char* name);
+    bool handleDelFriend(const char* name, const char* friendName);
 
 signals:
 private:
