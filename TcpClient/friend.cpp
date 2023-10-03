@@ -1,6 +1,7 @@
 ﻿#include "friend.h"
 #include "protocol.h"
 #include "tcpclient.h"
+#include "privatechat.h"
 #include <QInputDialog>
 #include <QDebug>
 
@@ -48,6 +49,7 @@ Friend::Friend(QWidget *parent)
     connect(m_pSearchUserPB, &QPushButton::clicked, this, &Friend::searchUser);
     connect(m_pFlushFriendPB, &QPushButton::clicked, this, &Friend::flushFriend);
     connect(m_pDelFriendPB, &QPushButton::clicked, this, &Friend::delFriend);
+    connect(m_pPrivateChatPB, &QPushButton::clicked, this, &Friend::privateChat);
 }
 
 void Friend::showAllOnlineUser(PDU *pdu)
@@ -118,6 +120,20 @@ void Friend::delFriend()
     TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
     free(pdu);
     pdu = nullptr;
+}
+
+void Friend::privateChat()
+{
+    if (nullptr == m_pFriendListWidget->currentItem())
+        return;
+
+    QString strChatName = m_pFriendListWidget->currentItem()->text();
+    PrivateChat::getInstance().setChatName(strChatName);
+
+    if (PrivateChat::getInstance().isHidden())
+    {
+        PrivateChat::getInstance().show();
+    }
 }
 
 void Friend::showOnline()
