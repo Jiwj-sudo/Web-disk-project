@@ -31,6 +31,8 @@ public:
     void AddFriendReqReply(PDU* pdu);
     void FlushFriendReply(PDU* pdu);
     void DelFriendReply();
+    void PrivateRequest(PDU* pdu);
+    void GroupRequest(PDU* pdu);
 
     QString getLoginName();
 

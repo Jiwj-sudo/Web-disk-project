@@ -1,5 +1,6 @@
 ﻿#include "tcpclient.h"
 #include "ui_tcpclient.h"
+#include "privatechat.h"
 #include <QByteArray>
 #include <QDebug>
 #include <QMessageBox>
@@ -17,7 +18,7 @@ TcpClient::TcpClient(QWidget *parent)
     connectionServer();
 
     //回车键登录
-    connect(ui->pwd_le, &QLineEdit::returnPressed, this, &TcpClient::on_login_pb_clicked);
+    connect(ui->pwd_le, &QLineEdit::returnPressed, ui->login_pb, &QPushButton::click);
 }
 
 TcpClient::~TcpClient()
@@ -84,10 +85,12 @@ void TcpClient::LoginReply(PDU* pdu)
 {
     if(0 == strcmp(pdu->caData, LOGIN_OK))
     {
-        QMessageBox::information(this, "登录", LOGIN_OK);
+        // QMessageBox::information(this, "登录", LOGIN_OK);
         OpeWidget::getInstance().show();
         //隐藏登录界面
         this->hide();
+        //登录成功后，直接刷新在线好友列表
+        OpeWidget::getInstance().getFriend()->flushFriend();
     }
     else if (0 == strcmp(pdu->caData, LOGIN_FAILED))
     {
@@ -175,6 +178,22 @@ void TcpClient::DelFriendReply()
     OpeWidget::getInstance().getFriend()->flushFriend();
 }
 
+void TcpClient::PrivateRequest(PDU *pdu)
+{
+    if (PrivateChat::getInstance().isHidden())
+        PrivateChat::getInstance().show();
+
+    char sendName[32] = {0};
+    strncpy(sendName, pdu->caData, 32);
+    PrivateChat::getInstance().setChatName(sendName);
+    PrivateChat::getInstance().updateMsg(pdu);
+}
+
+void TcpClient::GroupRequest(PDU *pdu)
+{
+    OpeWidget::getInstance().getFriend()->updateGroupMsg(pdu);
+}
+
 QString TcpClient::getLoginName()
 {
     return m_strLoginName;
@@ -231,6 +250,12 @@ void TcpClient::recvMsg()
     case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST:   //删除好友的申请提示
         QMessageBox::information(this, "删除", QString("%1 已将你删除").arg(reinterpret_cast<char*>(pdu->caData)));
         OpeWidget::getInstance().getFriend()->flushFriend();
+        break;
+    case ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST:
+        PrivateRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_GROUP_CHAT_REQUEST:
+        GroupRequest(pdu);
         break;
     default:
         break;

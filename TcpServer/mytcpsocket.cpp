@@ -224,13 +224,35 @@ void MyTcpSocket::DeleteFriendRequest(PDU *pdu)
 
     PDU* respdu = mkPDU(0);
     respdu->uiMsgType = ENUM_MSG_TYPE_DELETE_FRIEND_RESPOND;
-    strcpy(reinterpret_cast<char*>(respdu->caData), DEL_FRIEND_OK);
+    strcpy(respdu->caData, DEL_FRIEND_OK);
 
     write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
     free(respdu);
     respdu = nullptr;
 
     MyTcpServer::getInstance().resend(delName, pdu);
+}
+
+void MyTcpSocket::PrivateRequest(PDU *pdu)
+{
+    char strChatName[32] = {0};
+    strncpy(strChatName, pdu->caData + 32, 32);
+
+    MyTcpServer::getInstance().resend(strChatName, pdu);
+}
+
+void MyTcpSocket::GroupRequest(PDU *pdu)
+{
+    char caName[32] = {0};
+    strncpy(caName, pdu->caData, 32);
+    // 将所有在线的好友找出来
+    QStringList onlineFriend = OperatorDB::getInstance().handleFlushFriend(caName);
+    QString tmpName;
+    for (int i = 0; i < onlineFriend.size(); i++)
+    {
+        tmpName = onlineFriend[i];
+        MyTcpServer::getInstance().resend(tmpName.toUtf8().toStdString().c_str(), pdu);
+    }
 }
 
 void MyTcpSocket::recvMsg()
@@ -269,6 +291,12 @@ void MyTcpSocket::recvMsg()
         break;
     case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST:   //删除好友请求
         DeleteFriendRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST:    //私聊请求
+        PrivateRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_GROUP_CHAT_REQUEST:      //群聊请求
+        GroupRequest(pdu);
         break;
     default:
         break;

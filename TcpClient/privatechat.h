@@ -2,6 +2,7 @@
 #define PRIVATECHAT_H
 
 #include <QWidget>
+#include "protocol.h"
 
 namespace Ui {
 class PrivateChat;
@@ -18,6 +19,7 @@ public:
     static PrivateChat& getInstance();
 
     void setChatName(QString strName);
+    void updateMsg(const PDU* pdu);
 
 private slots:
     void on_sendMsg_pb_clicked();

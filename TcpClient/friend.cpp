@@ -50,6 +50,9 @@ Friend::Friend(QWidget *parent)
     connect(m_pFlushFriendPB, &QPushButton::clicked, this, &Friend::flushFriend);
     connect(m_pDelFriendPB, &QPushButton::clicked, this, &Friend::delFriend);
     connect(m_pPrivateChatPB, &QPushButton::clicked, this, &Friend::privateChat);
+
+    connect(m_pInputMsgLE, &QLineEdit::returnPressed, m_pMsgSendPB, &QPushButton::click);
+    connect(m_pMsgSendPB, &QPushButton::clicked, this, &Friend::groupChat);
 }
 
 void Friend::showAllOnlineUser(PDU *pdu)
@@ -73,6 +76,12 @@ void Friend::updateFriendList(PDU *pdu)
         strncpy(caName, reinterpret_cast<char*>(pdu->caMsg) + i*32, 32);
         m_pFriendListWidget->addItem(caName);
     }
+}
+
+void Friend::updateGroupMsg(PDU *pdu)
+{
+    QString strMsg = QString("%1 say: %2").arg(pdu->caData).arg(reinterpret_cast<char*>(pdu->caMsg));
+    m_pShowMsgTE->append(strMsg);
 }
 
 void Friend::searchUser()
@@ -133,6 +142,25 @@ void Friend::privateChat()
     if (PrivateChat::getInstance().isHidden())
     {
         PrivateChat::getInstance().show();
+    }
+}
+
+void Friend::groupChat()
+{
+    QString strMsg = m_pInputMsgLE->text();
+    if (!strMsg.isEmpty())
+    {
+        PDU* pdu = mkPDU(strMsg.toUtf8().size() + 1);
+        pdu->uiMsgType = ENUM_MSG_TYPE_GROUP_CHAT_REQUEST;
+        QString strName = TcpClient::getInstance().getLoginName();
+        strncpy(pdu->caData, strName.toUtf8().toStdString().c_str(), 32);
+        strncpy(reinterpret_cast<char*>(pdu->caMsg), strMsg.toUtf8().toStdString().c_str(), strMsg.toUtf8().size() + 1);
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+
+        m_pInputMsgLE->clear();
+        m_pShowMsgTE->append(QString("I say: %1").arg(strMsg));
     }
 }
 

@@ -20,6 +20,8 @@ public:
     void AddFriendRefuse(PDU* pdu);
     void FlushFriendRequest(PDU* pdu);
     void DeleteFriendRequest(PDU* pdu);
+    void PrivateRequest(PDU* pdu);
+    void GroupRequest(PDU* pdu);
 
 signals:
     void offline(MyTcpSocket* mysocket);

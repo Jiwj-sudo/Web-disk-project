@@ -8,6 +8,8 @@ PrivateChat::PrivateChat(QWidget *parent) :
     ui(new Ui::PrivateChat)
 {
     ui->setupUi(this);
+
+    connect(ui->inputMsg_le, &QLineEdit::returnPressed, this, &PrivateChat::on_sendMsg_pb_clicked);
 }
 
 PrivateChat::~PrivateChat()
@@ -27,6 +29,18 @@ void PrivateChat::setChatName(QString strName)
     m_strLoginName = TcpClient::getInstance().getLoginName();
 }
 
+void PrivateChat::updateMsg(const PDU *pdu)
+{
+    if (nullptr == pdu)
+        return ;
+
+    char sendName[32] = {0};
+    strncpy(sendName, pdu->caData, 32);
+
+    QString strMsg = QString("%1 say: %2").arg(sendName).arg(reinterpret_cast<const char*>(pdu->caMsg));
+    ui->showMsg_te->append(strMsg);
+}
+
 void PrivateChat::on_sendMsg_pb_clicked()
 {
     QString strMsg = ui->inputMsg_le->text();
@@ -43,6 +57,9 @@ void PrivateChat::on_sendMsg_pb_clicked()
 
         free(pdu);
         pdu = nullptr;
+
+        ui->showMsg_te->append(QString("I say: %1").arg(strMsg));
+        ui->inputMsg_le->clear();
     }
 }
 
