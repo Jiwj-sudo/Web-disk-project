@@ -22,6 +22,7 @@ public:
     void DeleteFriendRequest(PDU* pdu);
     void PrivateRequest(PDU* pdu);
     void GroupRequest(PDU* pdu);
+    void CreateDirRequest(PDU* pdu);
 
 signals:
     void offline(MyTcpSocket* mysocket);

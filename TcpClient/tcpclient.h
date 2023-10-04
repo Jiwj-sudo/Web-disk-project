@@ -33,8 +33,10 @@ public:
     void DelFriendReply();
     void PrivateRequest(PDU* pdu);
     void GroupRequest(PDU* pdu);
+    void CreateDirReply(PDU* pdu);
 
     QString getLoginName();
+    QString getCurPath();
 
 public slots:
     void showConnect();
@@ -54,5 +56,7 @@ private:
     QTcpSocket m_tcpSocket;
 
     QString m_strLoginName;
+
+    QString m_strCurPath;   //记录路径
 };
 #endif // TCPCLIENT_H

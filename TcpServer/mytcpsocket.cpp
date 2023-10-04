@@ -2,6 +2,7 @@
 #include "operatordb.h"
 #include "mytcpserver.h"
 #include <QDebug>
+#include <QDir>
 #include <QStringList>
 
 MyTcpSocket::MyTcpSocket(QObject *parent)
@@ -28,6 +29,8 @@ void MyTcpSocket::RegistrationRequest(PDU *pdu)
     if (ret)
     {
         strcpy(respdu->caData, REGIST_OK);
+        QDir dir;
+        qDebug() << "create dir: " << dir.mkdir(QString("../home/%1").arg(caName));
     }
     else
     {
@@ -255,6 +258,43 @@ void MyTcpSocket::GroupRequest(PDU *pdu)
     }
 }
 
+void MyTcpSocket::CreateDirRequest(PDU *pdu)
+{
+    QDir dir;
+    QString strCurPath = QString("%1").arg(reinterpret_cast<char*>(pdu->caMsg));
+    bool ret = dir.exists(strCurPath);
+    PDU* respdu = nullptr;
+    if (ret)
+    {
+        char caNewDir[32] = {0};
+        strncpy(caNewDir, pdu->caData+32, 32);
+        QString strNewPath = strCurPath + "/" + caNewDir;
+        ret = dir.exists(strNewPath);
+
+        if (ret)   //创建的文件名已存在
+        {
+            respdu = mkPDU(0);
+            respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
+            strcpy(respdu->caData, FILE_NAME_EXIST);
+        }
+        else
+        {
+            dir.mkdir(strNewPath);
+            respdu = mkPDU(0);
+            respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
+        }
+    }
+    else  //当前目录不存在
+    {
+        respdu = mkPDU(0);
+        respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
+        strcpy(respdu->caData, DIR_NOEXIST);
+    }
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
 void MyTcpSocket::recvMsg()
 {
     // qDebug() << this->bytesAvailable();
@@ -297,6 +337,9 @@ void MyTcpSocket::recvMsg()
         break;
     case ENUM_MSG_TYPE_GROUP_CHAT_REQUEST:      //群聊请求
         GroupRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_CREATE_DIR_REQUEST:      //新建文件夹请求
+        CreateDirRequest(pdu);
         break;
     default:
         break;

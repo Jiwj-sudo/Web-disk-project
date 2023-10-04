@@ -85,11 +85,12 @@ void TcpClient::LoginReply(PDU* pdu)
 {
     if(0 == strcmp(pdu->caData, LOGIN_OK))
     {
+        m_strCurPath = QString("../home/%1").arg(m_strLoginName);
         // QMessageBox::information(this, "登录", LOGIN_OK);
         OpeWidget::getInstance().show();
         //隐藏登录界面
         this->hide();
-        //登录成功后，直接刷新在线好友列表
+        // 登录成功后，直接刷新在线好友列表
         OpeWidget::getInstance().getFriend()->flushFriend();
     }
     else if (0 == strcmp(pdu->caData, LOGIN_FAILED))
@@ -194,9 +195,22 @@ void TcpClient::GroupRequest(PDU *pdu)
     OpeWidget::getInstance().getFriend()->updateGroupMsg(pdu);
 }
 
+void TcpClient::CreateDirReply(PDU *pdu)
+{
+    if (strlen(pdu->caData) != 0)
+    {
+        QMessageBox::warning(this, "创建文件夹", pdu->caData);
+    }
+}
+
 QString TcpClient::getLoginName()
 {
     return m_strLoginName;
+}
+
+QString TcpClient::getCurPath()
+{
+    return m_strCurPath;
 }
 
 void TcpClient::showConnect()
@@ -256,6 +270,9 @@ void TcpClient::recvMsg()
         break;
     case ENUM_MSG_TYPE_GROUP_CHAT_REQUEST:
         GroupRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_CREATE_DIR_RESPOND:
+        CreateDirReply(pdu);
         break;
     default:
         break;

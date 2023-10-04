@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include "protocol.h"
 
 class Book : public QWidget
 {
@@ -14,6 +15,8 @@ public:
     explicit Book(QWidget *parent = nullptr);
 
 signals:
+public slots:
+    void createDir();
 
 private:
     QListWidget* m_pBookListW;

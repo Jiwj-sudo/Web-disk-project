@@ -1,4 +1,7 @@
 ﻿#include "book.h"
+#include "tcpclient.h"
+#include <QInputDialog>
+#include <QMessageBox>
 
 Book::Book(QWidget *parent)
     : QWidget{parent}
@@ -35,4 +38,33 @@ Book::Book(QWidget *parent)
     pMain->addLayout(pFileVBL);
 
     setLayout(pMain);
+
+    connect(m_pCreateDirPB, &QPushButton::clicked, this, &Book::createDir);
+}
+
+void Book::createDir()
+{
+    QString strNewDir = QInputDialog::getText(this, "新建文件夹", "新文件夹名字");
+    if (strNewDir.toUtf8().size() >= 32)
+        QMessageBox::warning(this, "警告", "文件夹名称长度不能超过32");
+
+    if (!strNewDir.isEmpty())
+    {
+        QString strName = TcpClient::getInstance().getLoginName();
+        QString strCurPath = TcpClient::getInstance().getCurPath();
+        PDU* pdu = mkPDU(strCurPath.toUtf8().size()+1);
+        pdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_REQUEST;
+        strncpy(pdu->caData, strName.toUtf8().toStdString().c_str(), 32);
+        strncpy(pdu->caData+32, strNewDir.toUtf8().toStdString().c_str(), 32);
+
+        strcpy(reinterpret_cast<char*>(pdu->caMsg), strCurPath.toUtf8().toStdString().c_str());
+
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }
+    else
+    {
+        QMessageBox::warning(this, "警告", "文件夹名称不能为空");
+    }
 }

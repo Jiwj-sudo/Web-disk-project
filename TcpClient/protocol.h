@@ -29,6 +29,9 @@ typedef unsigned int uint;
 
 #define DEL_FRIEND_OK "delete friend ok"
 
+#define DIR_NOEXIST "文件夹不存在"
+#define FILE_NAME_EXIST "文件名已经存在"
+
 enum ENUM_MSG_TYPE
 {
     ENUM_MSG_TYPE_MIN = 0,
@@ -64,6 +67,9 @@ enum ENUM_MSG_TYPE
 
     ENUM_MSG_TYPE_GROUP_CHAT_REQUEST,   //群聊请求
     ENUM_MSG_TYPE_GROUP_CHAT_RESPOND,   //群聊回复
+
+    ENUM_MSG_TYPE_CREATE_DIR_REQUEST,   //创建文件夹请求
+    ENUM_MSG_TYPE_CREATE_DIR_RESPOND,   //创建文件夹回复
     ENUM_MSG_TYPE_MAX = 0x00ffffff,
 };
 
