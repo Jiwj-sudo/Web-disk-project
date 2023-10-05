@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QStringList>
+#include <QFileInfoList>
 
 MyTcpSocket::MyTcpSocket(QObject *parent)
     : QTcpSocket{parent}
@@ -290,6 +291,40 @@ void MyTcpSocket::CreateDirRequest(PDU *pdu)
         respdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_RESPOND;
         strcpy(respdu->caData, DIR_NOEXIST);
     }
+
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
+void MyTcpSocket::FlushFileRequest(PDU *pdu)
+{
+    char* pCurPath = new char[pdu->uiMsgLen+1];
+    strcpy(pCurPath, reinterpret_cast<char*>(pdu->caMsg));
+    QDir dir(pCurPath);
+    QFileInfoList fileInfoList = dir.entryInfoList();
+
+    int iFileCount = fileInfoList.size();
+    PDU* respdu = mkPDU(sizeof(FileInfo)*(iFileCount));
+    respdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FILE_RESPOND;
+    FileInfo* pFileInfo = nullptr;
+    QString strFileName;
+    for(int i = 0; i < iFileCount; i++)
+    {
+        pFileInfo = reinterpret_cast<FileInfo*>(respdu->caMsg) + i;
+        strFileName = fileInfoList[i].fileName();
+
+        strncpy(pFileInfo->caFileName, strFileName.toUtf8().toStdString().c_str(), 32);
+        if (fileInfoList[i].isDir())
+        {
+            pFileInfo->iFileType = 0;
+        }
+        else if (fileInfoList[i].isFile())
+        {
+            pFileInfo->iFileType = 1;
+        }
+    }
+
     write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
     free(respdu);
     respdu = nullptr;
@@ -340,6 +375,9 @@ void MyTcpSocket::recvMsg()
         break;
     case ENUM_MSG_TYPE_CREATE_DIR_REQUEST:      //新建文件夹请求
         CreateDirRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_FLUSH_FILE_REQUEST:
+        FlushFileRequest(pdu);
         break;
     default:
         break;

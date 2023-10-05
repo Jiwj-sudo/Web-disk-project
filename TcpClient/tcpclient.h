@@ -34,6 +34,7 @@ public:
     void PrivateRequest(PDU* pdu);
     void GroupRequest(PDU* pdu);
     void CreateDirReply(PDU* pdu);
+    void FlushFileReply(PDU* pdu);
 
     QString getLoginName();
     QString getCurPath();

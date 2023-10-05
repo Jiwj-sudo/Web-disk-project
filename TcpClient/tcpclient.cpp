@@ -203,6 +203,11 @@ void TcpClient::CreateDirReply(PDU *pdu)
     }
 }
 
+void TcpClient::FlushFileReply(PDU *pdu)
+{
+    OpeWidget::getInstance().getBook()->updateFileList(pdu);
+}
+
 QString TcpClient::getLoginName()
 {
     return m_strLoginName;
@@ -273,6 +278,9 @@ void TcpClient::recvMsg()
         break;
     case ENUM_MSG_TYPE_CREATE_DIR_RESPOND:
         CreateDirReply(pdu);
+        break;
+    case ENUM_MSG_TYPE_FLUSH_FILE_RESPOND:
+        FlushFileReply(pdu);
         break;
     default:
         break;
