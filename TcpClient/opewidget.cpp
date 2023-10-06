@@ -13,6 +13,9 @@ OpeWidget::OpeWidget(QWidget *parent)
     m_pFriend = new Friend;
     m_pBook = new Book;
 
+    emit m_pFriend->getFlushPB()->click();
+    // emit m_pBook->getFlushPB()->click();
+
     m_pSW =  new QStackedWidget;
     m_pSW->addWidget(m_pFriend);
     m_pSW->addWidget(m_pBook);
@@ -24,6 +27,13 @@ OpeWidget::OpeWidget(QWidget *parent)
     setLayout(pMain);
 
     connect(m_pListW, &QListWidget::currentRowChanged, m_pSW, &QStackedWidget::setCurrentIndex);
+    connect(m_pSW, &QStackedWidget::currentChanged, this, [=](int index)
+    {
+        if (index == 0)
+            emit m_pFriend->getFlushPB()->click();
+        else if (index == 1)
+            emit m_pBook->getFlushPB()->click();
+    });
 }
 
 OpeWidget &OpeWidget::getInstance()

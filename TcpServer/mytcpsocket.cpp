@@ -330,6 +330,48 @@ void MyTcpSocket::FlushFileRequest(PDU *pdu)
     respdu = nullptr;
 }
 
+void MyTcpSocket::DelDirRequest(PDU *pdu)
+{
+    char caName[32] = {0};
+    strcpy(caName, pdu->caData);
+    char* pPath = new char[pdu->uiMsgLen];
+    memcpy(pPath, pdu->caMsg, pdu->uiMsgLen);
+
+    QString strPath = QString("%1/%2").arg(pPath).arg(caName);
+
+
+    QFileInfo fileInfo(strPath);
+    bool flag = false;
+    if (fileInfo.isDir())
+    {
+        QDir dir;
+        dir.setPath(strPath);
+        flag = dir.removeRecursively();
+    }
+    else if (fileInfo.isFile())
+    {
+        flag = false;
+    }
+
+    PDU* respdu = nullptr;
+    if (flag)
+    {
+        respdu = mkPDU(strlen(DEL_DIR_OK)+1);
+        respdu->uiMsgType = ENUM_MSG_TYPE_DEL_DIR_RESPOND;
+        memcpy(respdu->caData, DEL_DIR_OK, strlen(DEL_DIR_OK)+1);
+    }
+    else
+    {
+        respdu = mkPDU(strlen(DEL_DIR_FAILED)+1);
+        respdu->uiMsgType = ENUM_MSG_TYPE_DEL_DIR_RESPOND;
+        memcpy(respdu->caData, DEL_DIR_FAILED, strlen(DEL_DIR_FAILED)+1);
+    }
+
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
 void MyTcpSocket::recvMsg()
 {
     // qDebug() << this->bytesAvailable();
@@ -378,6 +420,9 @@ void MyTcpSocket::recvMsg()
         break;
     case ENUM_MSG_TYPE_FLUSH_FILE_REQUEST:
         FlushFileRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_DEL_DIR_REQUEST:
+        DelDirRequest(pdu);
         break;
     default:
         break;

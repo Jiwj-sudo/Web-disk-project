@@ -32,6 +32,9 @@ typedef unsigned int uint;
 #define DIR_NOEXIST "文件夹不存在"
 #define FILE_NAME_EXIST "文件名已经存在"
 
+#define DEL_DIR_OK "删除文件夹成功"
+#define DEL_DIR_FAILED "删除文件夹失败"
+
 enum ENUM_MSG_TYPE
 {
     ENUM_MSG_TYPE_MIN = 0,
@@ -73,6 +76,9 @@ enum ENUM_MSG_TYPE
 
     ENUM_MSG_TYPE_FLUSH_FILE_REQUEST,   //刷新文件请求
     ENUM_MSG_TYPE_FLUSH_FILE_RESPOND,   //刷新文件回复
+
+    ENUM_MSG_TYPE_DEL_DIR_REQUEST,      //删除目录请求
+    ENUM_MSG_TYPE_DEL_DIR_RESPOND,      //删除目录回复
     ENUM_MSG_TYPE_MAX = 0x00ffffff,
 };
 

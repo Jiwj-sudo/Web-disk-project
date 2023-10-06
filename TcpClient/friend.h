@@ -20,6 +20,7 @@ public:
     void updateGroupMsg(PDU* pdu);
 
     QString m_strSearchName;
+    QPushButton* getFlushPB();
 
 signals:
 

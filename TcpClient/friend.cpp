@@ -84,6 +84,11 @@ void Friend::updateGroupMsg(PDU *pdu)
     m_pShowMsgTE->append(strMsg);
 }
 
+QPushButton *Friend::getFlushPB()
+{
+    return m_pFlushFriendPB;
+}
+
 void Friend::searchUser()
 {
     m_strSearchName = QInputDialog::getText(this, "搜索", "用户名: ");

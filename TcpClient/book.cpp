@@ -41,6 +41,7 @@ Book::Book(QWidget *parent)
 
     connect(m_pCreateDirPB, &QPushButton::clicked, this, &Book::createDir);
     connect(m_pFlushFilePB, &QPushButton::clicked, this, &Book::flushFile);
+    connect(m_pDelDirPB, &QPushButton::clicked, this, &Book::delDir);
 }
 
 void Book::updateFileList(const PDU *pdu)
@@ -77,6 +78,11 @@ void Book::updateFileList(const PDU *pdu)
         pItem->setText(pFileInfo->caFileName);
         m_pBookListW->addItem(pItem);
     }
+}
+
+QPushButton *Book::getFlushPB()
+{
+    return m_pFlushFilePB;
 }
 
 void Book::createDir()
@@ -116,4 +122,22 @@ void Book::flushFile()
     TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
     free(pdu);
     pdu = nullptr;
+}
+
+void Book::delDir()
+{
+    QString strCurPath = TcpClient::getInstance().getCurPath();
+    QListWidgetItem* pItem = m_pBookListW->currentItem();
+    if(pItem)
+    {
+        QString strDelName = pItem->text();
+        PDU* pdu = mkPDU(strCurPath.toUtf8().size()+1);
+        pdu->uiMsgType = ENUM_MSG_TYPE_DEL_DIR_REQUEST;
+        strncpy(pdu->caData, strDelName.toUtf8().toStdString().c_str(), 32);
+        memcpy(pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.toUtf8().size()+1);
+
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }
 }

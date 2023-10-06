@@ -90,8 +90,9 @@ void TcpClient::LoginReply(PDU* pdu)
         OpeWidget::getInstance().show();
         //隐藏登录界面
         this->hide();
-        // 登录成功后，直接刷新在线好友列表
-        OpeWidget::getInstance().getFriend()->flushFriend();
+        // 登录成功后，直接刷新在线好友列表和文件列表
+        // OpeWidget::getInstance().getFriend()->flushFriend();
+        // OpeWidget::getInstance().getBook()->flushFile();
     }
     else if (0 == strcmp(pdu->caData, LOGIN_FAILED))
     {
@@ -208,6 +209,17 @@ void TcpClient::FlushFileReply(PDU *pdu)
     OpeWidget::getInstance().getBook()->updateFileList(pdu);
 }
 
+void TcpClient::DelDirReply(PDU *pdu)
+{
+    if (0 == strcmp(pdu->caData, DEL_DIR_OK))
+    {
+        emit OpeWidget::getInstance().getBook()->getFlushPB()->click();
+        return;
+    }
+
+    QMessageBox::information(this, "删除文件夹", pdu->caData);
+}
+
 QString TcpClient::getLoginName()
 {
     return m_strLoginName;
@@ -281,6 +293,9 @@ void TcpClient::recvMsg()
         break;
     case ENUM_MSG_TYPE_FLUSH_FILE_RESPOND:
         FlushFileReply(pdu);
+        break;
+    case ENUM_MSG_TYPE_DEL_DIR_RESPOND:
+        DelDirReply(pdu);
         break;
     default:
         break;

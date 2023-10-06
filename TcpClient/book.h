@@ -15,11 +15,13 @@ public:
     explicit Book(QWidget *parent = nullptr);
 
     void updateFileList(const PDU* pdu);
+    QPushButton* getFlushPB();
 
 signals:
 public slots:
     void createDir();
     void flushFile();
+    void delDir();
 
 private:
     QListWidget* m_pBookListW;
