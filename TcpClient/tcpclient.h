@@ -36,9 +36,13 @@ public:
     void CreateDirReply(PDU* pdu);
     void FlushFileReply(PDU* pdu);
     void DelDirReply(PDU* pdu);
+    void ReNameFileReply(PDU* pdu);
+    void EnterDirReply(PDU* pdu);
+    void DelFileReply(PDU* pdu);
 
     QString getLoginName();
     QString getCurPath();
+    void setCurPath(QString strCurPath);
 
 public slots:
     void showConnect();

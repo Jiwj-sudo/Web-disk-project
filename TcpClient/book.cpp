@@ -2,10 +2,14 @@
 #include "tcpclient.h"
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QVariant>
+#include <QFileDialog>
 
 Book::Book(QWidget *parent)
     : QWidget{parent}
 {
+    m_strEnterDir.clear();
+
     m_pBookListW = new QListWidget;
 
     m_pReturnPB = new QPushButton("返回");
@@ -42,6 +46,11 @@ Book::Book(QWidget *parent)
     connect(m_pCreateDirPB, &QPushButton::clicked, this, &Book::createDir);
     connect(m_pFlushFilePB, &QPushButton::clicked, this, &Book::flushFile);
     connect(m_pDelDirPB, &QPushButton::clicked, this, &Book::delDir);
+    connect(m_pReNamePB, &QPushButton::clicked, this, &Book::reName);
+    connect(m_pBookListW, &QListWidget::doubleClicked, this, &Book::enterDir);
+    connect(m_pReturnPB, &QPushButton::clicked, this, &Book::returnPre);
+    connect(m_pDelFilePB, &QPushButton::clicked, this, &Book::delRegFile);
+    connect(m_pUploadPB, &QPushButton::clicked, this, &Book::uploadFile);
 }
 
 void Book::updateFileList(const PDU *pdu)
@@ -83,6 +92,16 @@ void Book::updateFileList(const PDU *pdu)
 QPushButton *Book::getFlushPB()
 {
     return m_pFlushFilePB;
+}
+
+void Book::clearEnterDir()
+{
+    m_strEnterDir.clear();
+}
+
+QString Book::enterDirName()
+{
+    return m_strEnterDir;
 }
 
 void Book::createDir()
@@ -139,5 +158,113 @@ void Book::delDir()
         TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
+    }
+}
+
+void Book::reName()
+{
+    QString strCurPath = TcpClient::getInstance().getCurPath();
+    QListWidgetItem* pItem = m_pBookListW->currentItem();
+    if (nullptr == pItem)
+    {
+        QMessageBox::warning(this, "重命名文件", "请选择文件");
+    }
+    else
+    {
+        QString strOldName = pItem->text();
+        QString strNewName = QInputDialog::getText(this, "重命名文件", "请输入新的文件名");
+        if (!strNewName.isEmpty())
+        {
+            PDU* pdu = mkPDU(strCurPath.toUtf8().size()+1);
+            pdu->uiMsgType = ENUM_MSG_TYPE_RENAME_FILE_REQUEST;
+            strcpy(pdu->caData, strOldName.toUtf8().toStdString().c_str());
+            strcpy(pdu->caData + 32, strNewName.toUtf8().toStdString().c_str());
+            memcpy(pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.toUtf8().size()+1);
+
+            TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+            free(pdu);
+            pdu = nullptr;
+        }
+    }
+}
+
+void Book::enterDir(const QModelIndex &index)
+{
+    QString strDirName = index.data().toString();
+    m_strEnterDir = strDirName;
+    QString strCurPath = TcpClient::getInstance().getCurPath();
+    PDU* pdu = mkPDU(strCurPath.toUtf8().size()+1);
+    pdu->uiMsgType = ENUM_MSG_TYPE_ENTER_DIR_REQUEST;
+    strcpy(pdu->caData, strDirName.toUtf8().toStdString().c_str());
+    memcpy(pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.toUtf8().size()+1);
+
+    TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+    free(pdu);
+    pdu = nullptr;
+}
+
+void Book::returnPre()
+{
+    QString strCurPath = TcpClient::getInstance().getCurPath();
+    QString strRootPath = "../home/" + TcpClient::getInstance().getLoginName();
+    if (strCurPath == strRootPath)
+    {
+        QMessageBox::warning(this, "返回", "返回失败: 已经在根目录");
+    }
+    else
+    {
+        int index = strCurPath.lastIndexOf("/");
+        strCurPath.remove(index, strCurPath.toUtf8().size()-index);
+        // qDebug() << "returnPre: " << strCurPath;
+        TcpClient::getInstance().setCurPath(strCurPath);
+
+        clearEnterDir();
+        flushFile();
+    }
+}
+
+void Book::delRegFile()
+{
+    QString strCurPath = TcpClient::getInstance().getCurPath();
+    QListWidgetItem* pItem = m_pBookListW->currentItem();
+    if(pItem)
+    {
+        QString strDelName = pItem->text();
+        PDU* pdu = mkPDU(strCurPath.toUtf8().size()+1);
+        pdu->uiMsgType = ENUM_MSG_TYPE_DEL_FILE_REQUEST;
+        strncpy(pdu->caData, strDelName.toUtf8().toStdString().c_str(), 32);
+        memcpy(pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.toUtf8().size()+1);
+
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }
+}
+
+void Book::uploadFile()
+{
+    QString strUploadFilePath = QFileDialog::getOpenFileName();
+    if (!strUploadFilePath.isEmpty())
+    {
+        int index = strUploadFilePath.lastIndexOf("/");
+        QString strFileName = strUploadFilePath.right(strUploadFilePath.toUtf8().size()-index-1);
+
+        QFile file(strUploadFilePath);
+        qint64 fileSize = file.size();   //获得文件大小
+
+        QString strCurPath = TcpClient::getInstance().getCurPath();
+
+        PDU* pdu = mkPDU(strCurPath.toUtf8().size()+1);
+        pdu->uiMsgType = ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST;
+        memcpy(pdu->caMsg, strCurPath.toStdString().c_str(), strCurPath.toUtf8().size()+1);
+        sprintf(pdu->caData, "%s %lld", strFileName.toUtf8().toStdString().c_str(), fileSize);
+
+        TcpClient::getInstance().getTcpSocket().write(reinterpret_cast<char*>(pdu), pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }
+    else
+    {
+        QMessageBox::warning(this, "上传文件", "请选择一个文件");
     }
 }

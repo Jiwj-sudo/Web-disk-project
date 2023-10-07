@@ -31,7 +31,8 @@ void MyTcpSocket::RegistrationRequest(PDU *pdu)
     {
         strcpy(respdu->caData, REGIST_OK);
         QDir dir;
-        qDebug() << "create dir: " << dir.mkdir(QString("../home/%1").arg(caName));
+        //qDebug() << "create dir: " <<
+        dir.mkdir(QString("../home/%1").arg(caName));
     }
     else
     {
@@ -372,6 +373,136 @@ void MyTcpSocket::DelDirRequest(PDU *pdu)
     respdu = nullptr;
 }
 
+void MyTcpSocket::ReNameFileRequest(PDU *pdu)
+{
+    char oldName[32] = {0};
+    char newName[32] = {0};
+    strcpy(oldName, pdu->caData);
+    strcpy(newName, pdu->caData + 32);
+
+    char* pPath = new char[pdu->uiMsgLen];
+    memcpy(pPath, pdu->caMsg, pdu->uiMsgLen);
+
+    QString strOldPath = QString("%1/%2").arg(pPath).arg(oldName);
+    QString strNewPath = QString("%1/%2").arg(pPath).arg(newName);
+    // qDebug() << strOldPath << " " << strNewPath;
+
+    QDir dir;
+    bool ret = dir.rename(strOldPath, strNewPath);
+
+    PDU* respdu = mkPDU(0);
+    respdu->uiMsgType = ENUM_MSG_TYPE_RENAME_FILE_RESPOND;
+    if (ret)
+    {
+        strcpy(pdu->caData, RENAME_FILE_OK);
+    }
+    else
+    {
+        strcpy(pdu->caData, RENAME_FILE_FAILED);
+    }
+
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
+void MyTcpSocket::EnterDirRequest(PDU *pdu)
+{
+    char strEnterName[32] = {0};
+    strcpy(strEnterName, pdu->caData);
+
+    char* pPath = new char[pdu->uiMsgLen];
+    memcpy(pPath, pdu->caMsg, pdu->uiMsgLen);
+
+    QString strPath = QString("%1/%2").arg(pPath).arg(strEnterName);
+    qDebug() << strPath;
+    QFileInfo fileInfo(strPath);
+    PDU* respdu = nullptr;
+    if (fileInfo.isDir())
+    {
+        QDir dir(strPath);
+        QFileInfoList fileInfoList = dir.entryInfoList();
+
+        int iFileCount = fileInfoList.size();
+        respdu = mkPDU(sizeof(FileInfo)*(iFileCount));
+        respdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FILE_RESPOND;
+        strcpy(respdu->caData, "enter dir");
+        FileInfo* pFileInfo = nullptr;
+        QString strFileName;
+        for(int i = 0; i < iFileCount; i++)
+        {
+            pFileInfo = reinterpret_cast<FileInfo*>(respdu->caMsg) + i;
+            strFileName = fileInfoList[i].fileName();
+
+            strncpy(pFileInfo->caFileName, strFileName.toUtf8().toStdString().c_str(), 32);
+            if (fileInfoList[i].isDir())
+            {
+                pFileInfo->iFileType = 0;
+            }
+            else if (fileInfoList[i].isFile())
+            {
+                pFileInfo->iFileType = 1;
+            }
+        }
+
+        write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+        free(respdu);
+        respdu = nullptr;
+    }
+    else if (fileInfo.isFile())
+    {
+        respdu = mkPDU(0);
+        respdu->uiMsgType = ENUM_MSG_TYPE_ENTER_DIR_RESPOND;
+        strcpy(respdu->caData, ENTER_DIR_FAILED);
+
+        write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+        free(respdu);
+        respdu = nullptr;
+    }
+}
+
+void MyTcpSocket::DelFileRequest(PDU *pdu)
+{
+    char caName[32] = {0};
+    strcpy(caName, pdu->caData);
+    char* pPath = new char[pdu->uiMsgLen];
+    memcpy(pPath, pdu->caMsg, pdu->uiMsgLen);
+
+    QString strPath = QString("%1/%2").arg(pPath).arg(caName);
+
+
+    QFileInfo fileInfo(strPath);
+    bool flag = false;
+    if (fileInfo.isDir())
+    {
+        flag = false;
+
+    }
+    else if (fileInfo.isFile())
+    {
+        QDir dir;
+        flag = dir.remove(strPath);
+    }
+
+    PDU* respdu = nullptr;
+    if (flag)
+    {
+        respdu = mkPDU(strlen(DEL_FILE_OK)+1);
+        respdu->uiMsgType = ENUM_MSG_TYPE_DEL_FILE_RESPOND;
+        memcpy(respdu->caData, DEL_FILE_OK, strlen(DEL_FILE_OK)+1);
+    }
+    else
+    {
+        respdu = mkPDU(strlen(DEL_FILE_FAILED)+1);
+        respdu->uiMsgType = ENUM_MSG_TYPE_DEL_FILE_RESPOND;
+        memcpy(respdu->caData, DEL_FILE_FAILED, strlen(DEL_FILE_FAILED)+1);
+    }
+
+    write(reinterpret_cast<char*>(respdu), respdu->uiPDULen);
+    free(respdu);
+    respdu = nullptr;
+}
+
 void MyTcpSocket::recvMsg()
 {
     // qDebug() << this->bytesAvailable();
@@ -423,6 +554,15 @@ void MyTcpSocket::recvMsg()
         break;
     case ENUM_MSG_TYPE_DEL_DIR_REQUEST:
         DelDirRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_RENAME_FILE_REQUEST:
+        ReNameFileRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_ENTER_DIR_REQUEST:
+        EnterDirRequest(pdu);
+        break;
+    case ENUM_MSG_TYPE_DEL_FILE_REQUEST:
+        DelFileRequest(pdu);
         break;
     default:
         break;

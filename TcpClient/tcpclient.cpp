@@ -165,7 +165,8 @@ void TcpClient::AddFriendReqReply(PDU *pdu)
     free(respdu);
     respdu = nullptr;
 
-    OpeWidget::getInstance().getFriend()->flushFriend();
+    // OpeWidget::getInstance().getFriend()->flushFriend();
+    emit OpeWidget::getInstance().getFriend()->getFlushPB()->click();
 }
 
 void TcpClient::FlushFriendReply(PDU *pdu)
@@ -177,7 +178,8 @@ void TcpClient::DelFriendReply()
 {
     QMessageBox::information(this, "删除", "删除好友成功");
     // 收到回复后直接刷新好友列表
-    OpeWidget::getInstance().getFriend()->flushFriend();
+    // OpeWidget::getInstance().getFriend()->flushFriend();
+    emit OpeWidget::getInstance().getFriend()->getFlushPB()->click();
 }
 
 void TcpClient::PrivateRequest(PDU *pdu)
@@ -202,11 +204,23 @@ void TcpClient::CreateDirReply(PDU *pdu)
     {
         QMessageBox::warning(this, "创建文件夹", pdu->caData);
     }
+    else
+    {
+        emit OpeWidget::getInstance().getBook()->getFlushPB()->click();
+    }
 }
 
 void TcpClient::FlushFileReply(PDU *pdu)
 {
     OpeWidget::getInstance().getBook()->updateFileList(pdu);
+    if (0 == strcmp(pdu->caData, "enter dir"))
+    {
+        QString strEnterDir = OpeWidget::getInstance().getBook()->enterDirName();
+        if (!strEnterDir.isEmpty())
+        {
+            m_strCurPath = m_strCurPath + "/" + strEnterDir;
+        }
+    }
 }
 
 void TcpClient::DelDirReply(PDU *pdu)
@@ -214,10 +228,38 @@ void TcpClient::DelDirReply(PDU *pdu)
     if (0 == strcmp(pdu->caData, DEL_DIR_OK))
     {
         emit OpeWidget::getInstance().getBook()->getFlushPB()->click();
-        return;
     }
+    else
+    {
+        QMessageBox::information(this, "删除文件夹", pdu->caData);
+    }
+}
 
-    QMessageBox::information(this, "删除文件夹", pdu->caData);
+void TcpClient::ReNameFileReply(PDU *pdu)
+{
+    if (0 == strcmp(pdu->caData, RENAME_FILE_FAILED))
+        QMessageBox::warning(this, "重命名", pdu->caData);
+    else
+        emit OpeWidget::getInstance().getBook()->getFlushPB()->click();
+}
+
+void TcpClient::EnterDirReply(PDU *pdu)
+{
+    OpeWidget::getInstance().getBook()->clearEnterDir();
+    QMessageBox::warning(this, "进入文件夹", pdu->caData);
+}
+
+void TcpClient::DelFileReply(PDU *pdu)
+{
+
+    if (0 == strcmp(pdu->caData, DEL_FILE_OK))
+    {
+        emit OpeWidget::getInstance().getBook()->getFlushPB()->click();
+    }
+    else
+    {
+        QMessageBox::information(this, "删除文件夹", pdu->caData);
+    }
 }
 
 QString TcpClient::getLoginName()
@@ -228,6 +270,11 @@ QString TcpClient::getLoginName()
 QString TcpClient::getCurPath()
 {
     return m_strCurPath;
+}
+
+void TcpClient::setCurPath(QString strCurPath)
+{
+    m_strCurPath = strCurPath;
 }
 
 void TcpClient::showConnect()
@@ -296,6 +343,15 @@ void TcpClient::recvMsg()
         break;
     case ENUM_MSG_TYPE_DEL_DIR_RESPOND:
         DelDirReply(pdu);
+        break;
+    case ENUM_MSG_TYPE_RENAME_FILE_RESPOND:
+        ReNameFileReply(pdu);
+        break;
+    case ENUM_MSG_TYPE_ENTER_DIR_RESPOND:
+        EnterDirReply(pdu);
+        break;
+    case ENUM_MSG_TYPE_DEL_FILE_RESPOND:
+        DelFileReply(pdu);
         break;
     default:
         break;
@@ -368,7 +424,6 @@ void TcpClient::on_regist_pb_clicked()
         QMessageBox::critical(this, "注册", "注册失败,用户名或密码为空!");
     }
 }
-
 
 void TcpClient::on_cancel_pb_clicked()
 {

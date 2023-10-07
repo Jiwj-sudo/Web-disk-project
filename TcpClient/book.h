@@ -16,12 +16,19 @@ public:
 
     void updateFileList(const PDU* pdu);
     QPushButton* getFlushPB();
+    void clearEnterDir();
+    QString enterDirName();
 
 signals:
 public slots:
     void createDir();
     void flushFile();
     void delDir();
+    void reName();
+    void enterDir(const QModelIndex &index);
+    void returnPre();
+    void delRegFile();
+    void uploadFile();
 
 private:
     QListWidget* m_pBookListW;
@@ -34,6 +41,8 @@ private:
     QPushButton* m_pDownLoadPB;
     QPushButton* m_pDelFilePB;
     QPushButton* m_pShareFilePB;
+
+    QString m_strEnterDir;
 };
 
 #endif // BOOK_H

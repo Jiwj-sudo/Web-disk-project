@@ -25,6 +25,9 @@ public:
     void CreateDirRequest(PDU* pdu);
     void FlushFileRequest(PDU* pdu);
     void DelDirRequest(PDU* pdu);
+    void ReNameFileRequest(PDU* pdu);
+    void EnterDirRequest(PDU* pdu);
+    void DelFileRequest(PDU* pdu);
 
 signals:
     void offline(MyTcpSocket* mysocket);
